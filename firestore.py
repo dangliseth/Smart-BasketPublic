@@ -6,7 +6,7 @@ from firebase_admin import credentials
 from firebase_admin import firestore
 
 cred = credentials.Certificate(
-    "smart-basket-90f82-firebase-adminsdk-jns92-ed6f036e1e.json"
+    "smart-basket-90f82-firebase-adminsdk-jns92-99b59e40f0.json"
     )
 firebase_admin.initialize_app(cred)
 db = firestore.client()
