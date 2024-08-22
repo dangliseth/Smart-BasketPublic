@@ -23,8 +23,11 @@ def init(root):
     total_label = tk.Label(root, text=f"Total: ₱0.00")
     total_label.pack()
 
-    qr_button = tk.Button(root, text="Generate QR Code", command=auto_scan)
-    qr_button.pack()
+    #qr_button = tk.Button(root, text="Generate QR Code", command=auto_scan)
+    #qr_button.pack()
+
+    scan_sample = tk.Button(root, text="Scan mo raw", command=auto_scan)
+    scan_sample.pack()
 
     #auto_scan()
 
