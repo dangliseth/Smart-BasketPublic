@@ -2,7 +2,7 @@ import pyzbar.pyzbar as pyzbar
 import tkinter as tk
 from PIL import Image, ImageTk
 import qrcode
-import firestore
+import firestore_py
 
 
 
@@ -29,9 +29,9 @@ def init(root):
     #auto_scan()
 
 def auto_scan():
-    barcode = firestore.scan_barcode()
+    barcode = firestore_py.scan_barcode()
     if barcode:
-        product, price = firestore.get_product_info(barcode)
+        product, price = firestore_py.get_product_info(barcode)
         product = str(product)
         price = float(price)
         if product in items:
