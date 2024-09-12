@@ -5,6 +5,8 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 
+import easygui as e
+
 cred = credentials.Certificate(
     "smart-basket-90f82-firebase-adminsdk-jns92-99b59e40f0.json"
     )
@@ -25,8 +27,12 @@ def scan_barcode():
     #cap.release()  
     #return None
 
-def get_product_info(barcode_data):
-    query = doc_ref.document(barcode_data).get()
+def sample():
+       barcode_data1 = "15235253435"
+       return barcode_data1
+
+def get_product_info(data):
+    query = doc_ref.document(data).get()
 
     if query.exists:
         item_data = query.to_dict()
@@ -35,3 +41,6 @@ def get_product_info(barcode_data):
         return itemName, itemPrice
     
     return None, None
+
+if __name__ == "__main__":
+       e.msgbox("I'm a module :(", "Simula ka sa Main")
