@@ -54,8 +54,9 @@ def init(root):
 def auto_scan():
     #barcode = firestore_py.scan_barcode()
     #if barcode:
-        product, price = firestore_py.get_product_info()
-        product = str(product)
+    product, price = firestore_py.get_product_info()
+    if product is not None and price is not None:
+        #product = str(product)
         price = float(price)
         if product in items:
             items[product]['quantity'] += 1
