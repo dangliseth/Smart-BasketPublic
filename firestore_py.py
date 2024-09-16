@@ -1,9 +1,9 @@
 import cv2
-import pyzbar.pyzbar as pyzbar
 
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
+import camtest
 
 import easygui as e
 
@@ -21,7 +21,11 @@ def scan_barcode():
         #barcodes = pyzbar.decode(frame)
         #for barcode in barcodes:
             #global barcode_data
-            barcode_data = "rtSK21qfunPHD9CFULuu"
+            barcode_data = camtest.classification()
+            if barcode_data == "3":
+                barcode_data = "15235253435"
+                
+            barcode_data = barcode_data
             #cap.release() 
             return barcode_data
     #cap.release()  
@@ -31,8 +35,10 @@ def sample():
        barcode_data1 = "15235253435"
        return barcode_data1
 
-def get_product_info(data):
+def get_product_info():
+    data = camtest.classification()
     query = doc_ref.document(data).get()
+    
 
     if query.exists:
         item_data = query.to_dict()
