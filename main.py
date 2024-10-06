@@ -28,9 +28,10 @@ def init(root):
     )
     sframe.grid(row=2, column=0, sticky="nsew", padx=25, pady=(0, 25))
 
-    global items, total, total_label, logoImage
+    global items, total, total_label, logoImage, budget
     items = {}
     total = 0.0
+    budget = 0.0
 
     title_frame = tk.Frame(root, bg="#FFC4C4")
     title_frame.grid(row=0, column=0, columnspan=2, sticky="nsew", padx=10)
@@ -75,6 +76,7 @@ def init(root):
     rows_frame.grid_columnconfigure(1, weight=1)
     rows_frame.grid_columnconfigure(2, weight=1)
     
+    global button_frame
     button_frame = tk.Frame(bottom_frame, bg="#FFC4C4")
     button_frame.grid(row=0, column=2, sticky="nsew", padx=10, pady=10)
     
@@ -89,9 +91,15 @@ def init(root):
     button_frame.grid_columnconfigure(1, weight=2)
     button_frame.grid_columnconfigure(2, weight=1)
     
-    #scan_sample = tk.Button(button_frame, text="Scan", command=auto_scan, bd=0, fg="white", bg="#CB4949", font=("Sans-Serif", 12))
-    #scan_sample.grid(row=4, column=1, sticky="nsew", columnspan=2, padx=5, pady=2)
+    global set_budget_button
+    set_budget_button = tk.Button(button_frame, text="Set Budget", command=show_budget_entry, bd=0, fg="white", bg="#CB4949", font=("Sans-Serif", 12))
+    set_budget_button.grid(row=3, column=1, columnspan=2, padx=5, pady=2)
 
+    global budget_label_display
+    # Label to display the set budget after it's confirmed
+    budget_label_display = tk.Label(button_frame, text="Budget: P0.00", bg="#FFC4C4", font=("Arial", 12))
+    budget_label_display.grid(row=2, column=1, sticky="nsew", columnspan=2, padx=5, pady=2)
+        
     qr_button = tk.Button(button_frame, text="Checkout", command=checkout, bd=0, fg="white", bg="#CB4949", font=("Sans-Serif", 12), padx=10, pady=8)
     qr_button.grid(row=6, column=1, sticky="new", columnspan=2, padx=5, pady=2)
 
@@ -149,38 +157,105 @@ def auto_scan():
     scanning_thread = threading.Thread(target=scan_barcode, args=(update_display_from_scan,))
     scanning_thread.daemon = True
     scanning_thread.start()
+
+def show_budget_entry():
+    global budget_entry, keyboard_window
+
+    # Remove the button after it's clicked
+    set_budget_button.grid_forget()
+
+    # Create a new Entry box where the button was
+    budget_entry = tk.Entry(button_frame, font=("Arial", 12), width=10)
+    budget_entry.grid(row=3, column=1, columnspan=2, padx=5, pady=2)
+
+    keyboard_window = show_on_screen_keyboard(budget_entry)
     
+    # Add a new button for confirming budget entry
+    global confirm_budget_button
+    confirm_budget_button = tk.Button(button_frame, text="Confirm", command=set_budget_from_entry, bd=0, fg="white", bg="#CB4949", font=("Sans-Serif", 12))
+    confirm_budget_button.grid(row=4, column=1, columnspan=2, padx=5, pady=2)
+
+def key_press(button_text, entry_widget):
+    current_text = entry_widget.get()
+    if button_text == "Clear":
+        entry_widget.delete(0, tk.END)
+    elif button_text == "Backspace":
+        entry_widget.delete(len(current_text) - 1, tk.END)
+    else:
+        entry_widget.insert(tk.END, button_text)
+
+# Function to show the numerical on-screen keyboard
+def show_on_screen_keyboard(entry_widget):
+    keyboard_window = tk.Toplevel()
+    keyboard_window.title("On-Screen Keyboard")
     
-def show_custom_error(title, image = 'warning.jpg'):
+    # Configure grid for numeric layout
+    keyboard_window.geometry("300x300")
+    buttons = [
+        '1', '2', '3',
+        '4', '5', '6',
+        '7', '8', '9',
+        'Clear', '0', 'Backspace'
+    ]
+    
+    for i, button_text in enumerate(buttons):
+        button = tk.Button(
+            keyboard_window, text=button_text, width=8, height=2,
+            command=lambda text=button_text: key_press(text, entry_widget)
+        )
+        button.grid(row=i//3, column=i%3, padx=5, pady=5)
+    return keyboard_window
+
+def set_budget_from_entry():
+    # Get the value from the entry box
+    amount = budget_entry.get()
+    if keyboard_window:
+        keyboard_window.destroy()
+
+    try:
+        budget = float(amount)
+        budget_label_display.config(text=f"Budget: P{budget:.2f}")
+        print(f"Budget set to: P{budget:.2f}")
+
+        budget_entry.grid_forget()
+        confirm_budget_button.grid_forget()
+
+        # Show the set_budget_button again for future updates
+        set_budget_button.grid(row=3, column=1, columnspan=2, padx=5, pady=2)
+
+        # Check if the total exceeds the budget and show an alert if necessary
+        if total >= budget:
+            show_custom_error("Budget Alert", f"Your total of P{total:.2f} exceeds the budget of P{budget:.2f}!")
+    except ValueError:
+        show_custom_error("Invalid Input", "Please enter a valid number for the budget.")
+
+    
+def show_custom_error(title, message="Error occurred", image="warning.jpg"):
     # Create a new window for the error message
     error_window = tk.Toplevel()
     error_window.title(title)
     error_window.geometry("300x150")
-    
-    # Load the custom 'X' image
+
+    # Error image (optional)
     try:
-        img = Image.open(image)  # Replace with your image path
-        img = img.resize((50, 50), Image.ANTIALIAS)  # Resize the image if necessary
+        img = Image.open(image)
+        img = img.resize((50, 50), Image.ANTIALIAS)
         img_tk = ImageTk.PhotoImage(img)
-        
-        # Create an image label and pack it into the error window
         image_label = tk.Label(error_window, image=img_tk)
-        image_label.image = img_tk  # Keep a reference to avoid garbage collection
+        image_label.image = img_tk
         image_label.pack(pady=10)
     except Exception as e:
-        print(f"Error loading image: {e}")
+        print(f"Image load failed: {e}")
     
-    # Create a label for the error message and pack it
-    message_label = tk.Label(error_window, text="Unrecognized barcode! Please try again.")
-    message_label.pack(pady=5)
-    
-    # Auto-close the error window after 2 seconds (2000 milliseconds)
-    error_window.after(1000, error_window.destroy)
-    
-    # Keep the error window on top
-    error_window.transient()
+    # Display the error message
+    error_label = tk.Label(error_window, text=message, font=("Arial", 12), wraplength=250)
+    error_label.pack(pady=10)
+
+    # OK button to close the error window
+    ok_button = tk.Button(error_window, text="OK", command=error_window.destroy)
+    ok_button.pack(pady=5)
+
     error_window.grab_set()
-    error_window.mainloop()
     
     
 def reset_basket():
@@ -221,14 +296,6 @@ def checkout():
     # Finish Shopping button
     finish_button = tk.Button(qr_window, text="Finish Shopping", command=reset_basket, bd=0, fg="white", bg="#CB4949", font=("Sans-Serif", 12), padx=10, pady=8)
     finish_button.pack(pady=10)
-
-    def close_qr_window():
-        qr_window.destroy()
-
-    # Automatically close the QR code window after 5 seconds (adjust as needed)
-    qr_window.after(10000, close_qr_window)
-
-    qr_window.grab_set()  # Make the QR code window modal
 
 
 
